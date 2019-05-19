@@ -1,20 +1,65 @@
-var UglifyJS = require("uglify-js");
-var fs = require('fs');
+const UglifyJS = require("uglify-js");
+const fs = require('fs');
+const path = require('path');
 
-//read the es5 js file after es6 js file being convert by babel
-fs.readFile('./build/somejs.js', 'utf8', function(err, contents) {
-  var afterMinify = UglifyJS.minify(contents); //minify the code
-  if(afterMinify.error) {
-    console.log(afterMinify.error);
-  } else {
-    console.log(afterMinify.code);
-    //wtite to a new js file
-    fs.writeFile("./build/somejs.min.js", afterMinify.code, (err) => {
-      if(err) { console.log(err) } else {
-        console.log("Successfully Written to File.");
+function readOneFile(dir, filename) {
+  return new Promise(function(resolve, reject) {
+    //read file
+    fs.readFile(path.resolve(dir, filename), 'utf8', function(err, contents) {
+      if(err) {
+        reject(err);
+      } else {
+        resolve(contents);
       }
     });
-  }
-});
+  });
+}
 
-console.log('after calling readFile');
+function readFiles(dir, processFile) {
+  // read directory
+  fs.readdir(dir, (error, fileNames) => {
+    if(error) throw error;
+    fileNames.forEach(filename => {
+      //promise , read a file
+      readOneFile(dir, filename)
+        .then(contents => {
+          // get current file name
+          const name = path.parse(filename).name;
+          // get current file extension
+          const ext = path.parse(filename).ext;
+          // get current file path
+          const filepath = path.resolve(dir, filename);
+          // callback, do something with the file
+          processFile(filepath, name, ext, contents);
+        })
+        .catch(err => {
+          console.log(err);
+        })
+    });
+  });
+}
+//promise, write minify code to new file
+function writeJSFile(path, name, ext, codes) {
+  return new Promise(function(resolve, reject) {
+    var afterMinify = UglifyJS.minify(codes); //minify ES5 js code
+    if(afterMinify.error) {
+      reject(afterMinify.error)
+    } else {
+      var newFilename = name + ".min" + ext; //create new filename ex: abc.min.js
+      //write minify code to new file
+      var output = path + "/" + newFilename;
+      fs.writeFile(output, afterMinify.code, (err) => {
+        if(err) {
+          reject(err)
+        } else {
+          resolve(`Successfully Written to File => ${newFilename}`)
+        }
+      })
+    }
+  });
+}
+readFiles(path.resolve(__dirname, "build/"), (filepath, name, ext, contents) => {
+  writeJSFile(path.resolve(__dirname, "build/"), name, ext, contents)
+    .then(result => console.log(result))
+    .catch(err => console.log(err));
+});
