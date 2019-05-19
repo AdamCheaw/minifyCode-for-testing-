@@ -1,0 +1,19 @@
+{
+  "name": "minifycode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "uglify-js": "^3.5.13"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0"
+  },
+  "scripts": {
+    "build": "rm -r build && babel src -d build && node index.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
