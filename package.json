@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "csso": "^3.5.1",
     "fs": "0.0.1-security",
     "uglify-js": "^3.5.13"
   },
